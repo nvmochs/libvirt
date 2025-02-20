@@ -187,6 +187,7 @@ VIR_ENUM_IMPL(virDomainFeature,
               "ras",
               "ps2",
               "aia",
+              "highmem-mmio-size",
 );
 
 VIR_ENUM_IMPL(virDomainCapabilitiesPolicy,
@@ -17129,6 +17130,30 @@ virDomainFeaturesDefParse(virDomainDef *def,
             }
             break;
 
+        case VIR_DOMAIN_FEATURE_HIGHMEM_MMIO_SIZE: {
+#if 0
+            if (virXMLPropULongLong(nodes[i], "value", virDomainHIGHMEM_MMIO_SIZETypeFromString,
+                                    VIR_XML_PROP_NONZERO, &def->highmem_mmio_size) < 0)
+                return -1;
+#else
+            if (virParseScaledValue("./highmem_mmio_size",
+                                    NULL,
+                                    ctxt,
+                                    &def->highmem_mmio_size,
+                                    1024,
+                                    ULLONG_MAX,
+                                    false) < 0) {
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                               "%s",
+                               _("Unable to parse highmem_mmio_size setting"));
+                return -1;
+            }
+#endif
+	    if (def->highmem_mmio_size > 0)
+                def->features[val] = VIR_TRISTATE_SWITCH_ON;
+            break;
+        }
+
         case VIR_DOMAIN_FEATURE_CFPC: {
             virDomainCFPC value;
 
@@ -21120,6 +21145,24 @@ virDomainDefFeaturesCheckABIStability(virDomainDef *src,
                                virTristateSwitchTypeToString(dst->features[i]),
                                "resizing", virDomainHPTResizingTypeToString(dst->hpt_resizing),
                                "maxpagesize", dst->hpt_maxpagesize);
+                return false;
+            }
+            break;
+
+        case VIR_DOMAIN_FEATURE_HIGHMEM_MMIO_SIZE:
+            if (src->features[i] != dst->features[i] ||
+                src->highmem_mmio_size != dst->highmem_mmio_size) {
+#if 0
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                               _("State of feature '%1$s' differs: source: '%2$s,%3$s=%4$s,%5$s=%6$llu', destination: '%7$s,%8$s=%9$s,%10$s=%11$llu'"),
+                               featureName,
+                               virTristateSwitchTypeToString(src->features[i]),
+                               "resizing", virDomainHPTResizingTypeToString(src->hpt_resizing),
+                               "maxpagesize", src->hpt_maxpagesize,
+                               virTristateSwitchTypeToString(dst->features[i]),
+                               "resizing", virDomainHPTResizingTypeToString(dst->hpt_resizing),
+                               "maxpagesize", dst->hpt_maxpagesize);
+#endif
                 return false;
             }
             break;
@@ -28207,6 +28250,18 @@ virDomainDefFormatFeatures(virBuffer *buf,
             }
 
             virXMLFormatElement(&childBuf, "hpt", &tmpAttrBuf, &tmpChildBuf);
+            break;
+
+        case VIR_DOMAIN_FEATURE_HIGHMEM_MMIO_SIZE:
+            if (def->features[i] != VIR_TRISTATE_SWITCH_ON)
+                break;
+
+            if (def->highmem_mmio_size == 0)
+                break;
+
+            virBufferAsprintf(&childBuf,
+                              "<highmem_mmio_size unit='KiB'>%llu</highmem_mmio_size>\n",
+                              def->highmem_mmio_size);
             break;
 
         case VIR_DOMAIN_FEATURE_MSRS:

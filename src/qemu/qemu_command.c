@@ -6746,6 +6746,13 @@ qemuAppendDomainFeaturesMachineParam(virBuffer *buf,
         virBufferAsprintf(buf, ",aia=%s", str);
     }
 
+    if (def->features[VIR_DOMAIN_FEATURE_HIGHMEM_MMIO_SIZE] != VIR_TRISTATE_SWITCH_ABSENT) {
+        if (def->highmem_mmio_size > 0) {
+            virBufferAsprintf(buf, ",highmem-mmio-size=%lluk",
+                              def->highmem_mmio_size);
+        }
+    }
+
     return 0;
 }
 

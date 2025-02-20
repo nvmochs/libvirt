@@ -2207,6 +2207,7 @@ typedef enum {
     VIR_DOMAIN_FEATURE_RAS,
     VIR_DOMAIN_FEATURE_PS2,
     VIR_DOMAIN_FEATURE_AIA,
+    VIR_DOMAIN_FEATURE_HIGHMEM_MMIO_SIZE,
 
     VIR_DOMAIN_FEATURE_LAST
 } virDomainFeature;
@@ -2388,6 +2389,10 @@ typedef enum {
 } virDomainHPTResizing;
 
 VIR_ENUM_DECL(virDomainHPTResizing);
+
+#if 0
+VIR_ENUM_DECL(virDomainHIGHMEM_MMIO_SIZE);
+#endif
 
 typedef enum {
     VIR_DOMAIN_CFPC_NONE = 0,
@@ -3118,6 +3123,7 @@ struct _virDomainDef {
     virGICVersion gic_version;
     virDomainHPTResizing hpt_resizing;
     unsigned long long hpt_maxpagesize; /* Stored in KiB */
+    unsigned long long highmem_mmio_size; /* Stored in KiB */
     char *hyperv_vendor_id;
     virTristateSwitch apic_eoi;
     virDomainFeatureTCG *tcg_features;

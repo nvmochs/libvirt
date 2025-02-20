@@ -279,6 +279,15 @@ qemuValidateDomainDefFeatures(const virDomainDef *def,
             }
             break;
 
+        case VIR_DOMAIN_FEATURE_HIGHMEM_MMIO_SIZE:
+            if (def->features[i] == VIR_TRISTATE_SWITCH_ON &&
+                !virQEMUCapsGet(qemuCaps, QEMU_CAPS_MACHINE_VIRT_HIGHMEM_MMIO_SIZE)) {
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                              _("highmem-mmio-size feature is not available with this QEMU binary"));
+                return -1;
+            }
+            break;
+
         case VIR_DOMAIN_FEATURE_SMM:
         case VIR_DOMAIN_FEATURE_KVM:
         case VIR_DOMAIN_FEATURE_XEN:
