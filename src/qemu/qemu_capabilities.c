@@ -728,6 +728,7 @@ VIR_ENUM_IMPL(virQEMUCaps,
               "machine.virt.aia", /* QEMU_CAPS_MACHINE_VIRT_AIA */
               "virtio-mem-ccw", /* QEMU_CAPS_DEVICE_VIRTIO_MEM_CCW */
               "blockdev-set-active", /* QEMU_CAPS_BLOCKDEV_SET_ACTIVE */
+              "machine.virt.highmem-mmio-size", /* QEMU_CAPS_MACHINE_VIRT_HIGHMEM_MMIO_SIZE */
     );
 
 
@@ -1770,6 +1771,7 @@ static struct virQEMUCapsStringFlags virQEMUCapsMachinePropsVirt[] = {
     { "iommu", QEMU_CAPS_MACHINE_VIRT_IOMMU },
     { "ras", QEMU_CAPS_MACHINE_VIRT_RAS },
     { "aia", QEMU_CAPS_MACHINE_VIRT_AIA },
+    { "highmem-mmio-size", QEMU_CAPS_MACHINE_VIRT_HIGHMEM_MMIO_SIZE },
 };
 
 static struct virQEMUCapsStringFlags virQEMUCapsMachinePropsGeneric[] = {

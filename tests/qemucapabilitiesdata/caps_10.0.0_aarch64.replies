@@ -33844,6 +33844,11 @@
       "type": "bool"
     },
     {
+      "name": "highmem-mmio-size",
+      "description": "Set the high memory region size for PCI MMIO",
+      "type": "size"
+    },
+    {
       "name": "highmem",
       "description": "Set on/off to enable/disable using physical address space above 32 bits",
       "type": "bool"
@@ -34468,6 +34473,11 @@
           "name": "highmem-ecam",
           "help": "Set on/off to enable/disable high memory region for PCI ECAM",
           "type": "boolean"
+        },
+        {
+          "name": "highmem-mmio-size",
+          "help": "Set the high memory region size for PCI MMIO",
+          "type": "size"
         },
         {
           "name": "highmem",
