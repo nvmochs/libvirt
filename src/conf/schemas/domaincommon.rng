@@ -7076,6 +7076,15 @@
           <optional>
             <ref name="aia"/>
           </optional>
+          <optional>
+            <element name='pci'>
+              <optional>
+                <element name='highmem-mmio-size'>
+                  <ref name='scaledInteger'/>
+                </element>
+              </optional>
+            </element>
+          </optional>
         </interleave>
       </element>
     </optional>
