@@ -16967,6 +16967,48 @@ virDomainFeaturesTCGDefParse(virDomainDef *def,
 }
 
 
+static virDomainPCIDef *
+virDomainPCIDefNew(void)
+{
+    virDomainPCIDef *pci;
+
+    pci = g_new0(virDomainPCIDef, 1);
+    return pci;
+}
+
+
+/**
+ * virDomainFeaturesPCIDefParseXML:
+ * @ctxt: XML context
+ *
+ * Parses PCI configuration from XML under features/pci. Currently only
+ * supports the highmem-mmio-size property for aarch64 virt machine types.
+ *
+ * Returns: parsed pci definition or NULL on error
+ */
+static virDomainPCIDef *
+virDomainFeaturesPCIDefParseXML(xmlXPathContextPtr ctxt)
+{
+    g_autoptr(virDomainPCIDef) pci = virDomainPCIDefNew();
+    unsigned long long size;
+    int rc;
+
+    if ((rc = virParseScaledValue("./features/pci/highmem-mmio-size",
+                                  NULL,
+                                  ctxt,
+                                  &size,
+                                  1024 * 1024 * 1024,  /* Default scale: GiB */
+                                  ULLONG_MAX,
+                                  false)) < 0)
+        return NULL;
+
+    if (rc == 1)
+        pci->highmemMMIOSize = size;
+
+    return g_steal_pointer(&pci);
+}
+
+
 static int
 virDomainFeaturesDefParse(virDomainDef *def,
                           xmlXPathContextPtr ctxt)
@@ -17212,6 +17254,13 @@ virDomainFeaturesDefParse(virDomainDef *def,
             def->features[val] = enabled;
             break;
         }
+
+        case VIR_DOMAIN_FEATURE_PCI:
+            if ((def->pci = virDomainFeaturesPCIDefParseXML(ctxt)) == NULL)
+                return -1;
+
+            def->features[val] = VIR_TRISTATE_SWITCH_ON;
+            break;
 
         case VIR_DOMAIN_FEATURE_LAST:
             break;
@@ -21192,6 +21241,25 @@ virDomainDefFeaturesCheckABIStability(virDomainDef *src,
                                "value", virDomainAIATypeToString(src->features[i]),
                                "value", virDomainAIATypeToString(dst->features[i]));
                 return false;
+            }
+            break;
+
+        case VIR_DOMAIN_FEATURE_PCI:
+            if (src->features[i] != dst->features[i]) {
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                               _("target domain pci feature %1$s does not match source %2$s"),
+                               virTristateSwitchTypeToString(dst->features[i]),
+                               virTristateSwitchTypeToString(src->features[i]));
+                return false;
+            }
+            if (src->features[i] == VIR_TRISTATE_SWITCH_ON) {
+                if (src->pci->highmemMMIOSize != dst->pci->highmemMMIOSize) {
+                    virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                                   _("target domain pci highmem-mmio-size %1$llu does not match source %2$llu"),
+                                   dst->pci->highmemMMIOSize,
+                                   src->pci->highmemMMIOSize);
+                    return false;
+                }
             }
             break;
 
@@ -27903,6 +27971,34 @@ virDomainFeatureTCGFormat(virBuffer *buf,
 }
 
 
+/**
+ * virDomainFeaturesPCIDefFormat:
+ * @buf: buffer to write XML data to
+ * @pci: PCI feature data to format
+ *
+ * Format the PCI feature configuration as XML under features/pci.
+ */
+static void
+virDomainFeaturesPCIDefFormat(virBuffer *buf,
+                             const virDomainPCIDef *pci)
+{
+    g_auto(virBuffer) attrBuf = VIR_BUFFER_INITIALIZER;
+    g_auto(virBuffer) childBuf = VIR_BUFFER_INIT_CHILD(buf);
+
+    if (!pci)
+        return;
+
+    if (pci->highmemMMIOSize > 0) {
+        virBufferAddLit(&attrBuf, " unit='G'");
+        virBufferAsprintf(&childBuf, "<highmem-mmio-size%s>%llu</highmem-mmio-size>\n",
+                         virBufferCurrentContent(&attrBuf),
+                         pci->highmemMMIOSize / (1024 * 1024 * 1024));
+    }
+
+    virXMLFormatElement(buf, "pci", NULL, &childBuf);
+}
+
+
 static int
 virDomainDefFormatFeatures(virBuffer *buf,
                            virDomainDef *def)
@@ -28259,6 +28355,11 @@ virDomainDefFormatFeatures(virBuffer *buf,
 
             virBufferAsprintf(&childBuf, "<aia value='%s'/>\n",
                               virDomainAIATypeToString(def->features[i]));
+            break;
+
+        case VIR_DOMAIN_FEATURE_PCI:
+            if (def->features[i] == VIR_TRISTATE_SWITCH_ON)
+                virDomainFeaturesPCIDefFormat(&childBuf, def->pci);
             break;
 
         case VIR_DOMAIN_FEATURE_LAST:
