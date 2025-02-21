@@ -6859,6 +6859,12 @@ qemuAppendDomainFeaturesMachineParam(virBuffer *buf,
         virBufferAsprintf(buf, ",aia=%s", str);
     }
 
+    if (def->features[VIR_DOMAIN_FEATURE_PCI] == VIR_TRISTATE_SWITCH_ON) {
+        if (def->pci && def->pci->highmemMMIOSize > 0) {
+            virBufferAsprintf(buf, ",highmem-mmio-size=%lluG",
+                              def->pci->highmemMMIOSize / (1024 * 1024 * 1024));
+        }
+    }
     return 0;
 }
 
