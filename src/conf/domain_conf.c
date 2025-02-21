@@ -187,6 +187,7 @@ VIR_ENUM_IMPL(virDomainFeature,
               "ras",
               "ps2",
               "aia",
+              "pci",
 );
 
 VIR_ENUM_IMPL(virDomainCapabilitiesPolicy,
@@ -4132,6 +4133,7 @@ void virDomainDefFree(virDomainDef *def)
     g_free(def->kvm_features);
     g_free(def->hyperv_vendor_id);
     g_free(def->tcg_features);
+    g_free(def->pci);
 
     virBlkioDeviceArrayClear(def->blkio.devices,
                              def->blkio.ndevices);
