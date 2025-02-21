@@ -279,6 +279,21 @@ qemuValidateDomainDefFeatures(const virDomainDef *def,
             }
             break;
 
+        case VIR_DOMAIN_FEATURE_PCI:
+            if (def->features[i] != VIR_TRISTATE_SWITCH_ABSENT &&
+                !qemuDomainIsARMVirt(def)) {
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                              _("features/pci is only supported with aarch64 virt machines"));
+                return -1;
+            }
+            if (def->features[i] != VIR_TRISTATE_SWITCH_ABSENT &&
+                !virQEMUCapsGet(qemuCaps, QEMU_CAPS_MACHINE_VIRT_HIGHMEM_MMIO_SIZE)) {
+                virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                              _("features/pci is not supported with this QEMU binary"));
+                return -1;
+            }
+            break;
+
         case VIR_DOMAIN_FEATURE_SMM:
         case VIR_DOMAIN_FEATURE_KVM:
         case VIR_DOMAIN_FEATURE_XEN:
