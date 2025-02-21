@@ -2207,6 +2207,7 @@ typedef enum {
     VIR_DOMAIN_FEATURE_RAS,
     VIR_DOMAIN_FEATURE_PS2,
     VIR_DOMAIN_FEATURE_AIA,
+    VIR_DOMAIN_FEATURE_PCI,
 
     VIR_DOMAIN_FEATURE_LAST
 } virDomainFeature;
@@ -3039,6 +3040,10 @@ struct _virDomainPstoreDef {
     virDomainDeviceInfo info;
 };
 
+typedef struct _virDomainPCIDef {
+    unsigned long long highmemMMIOSize;  /* in bytes */
+} virDomainPCIDef;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(virDomainPCIDef, virObjectUnref);
 
 #define SCSI_SUPER_WIDE_BUS_MAX_CONT_UNIT 64
 #define SCSI_WIDE_BUS_MAX_CONT_UNIT 16
@@ -3100,6 +3105,7 @@ struct _virDomainDef {
     virDomainPerfDef perf;
 
     virDomainOSDef os;
+    virDomainPCIDef *pci;
     char *emulator;
     /* Most {caps_,hyperv_,kvm_,}feature options utilize a virTristateSwitch
      * to handle support. A few assign specific data values to the option.
