@@ -2665,6 +2665,8 @@ mymain(void)
 
     DO_TEST_CAPS_ARCH_LATEST("clock-timer-armvtimer", "aarch64");
 
+    DO_TEST_CAPS_ARCH_LATEST("aarch64-virt-machine-pci", "aarch64");
+
     qemuTestSetHostArch(&driver, VIR_ARCH_NONE);
 
     DO_TEST_CAPS_LATEST("kvm-pit-delay");
